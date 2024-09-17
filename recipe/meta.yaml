@@ -1,5 +1,5 @@
 {% set name = "google-cloud-aiplatform" %}
-{% set version = "1.21.0" %}
+{% set version = "1.66.0" %}
 
 package:
   name: {{ name|lower }}
@@ -7,41 +7,62 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/google-cloud-aiplatform-{{ version }}.tar.gz
-  sha256: 3cd8fdc1b38e2a21552cbdacb338c4779a27c222bb1ea2481eb56b4fa844917b
+  sha256: e95a2b45087e0e2cbfed9ffaf3f10aa8ef3fa2e5642f067246181b5c7b9b2b04
 
 build:
-  script: {{ PYTHON }} -m pip install . -vv
   number: 0
+  skip: true  # [py<38]
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+  entry_points:
+    - tb-gcp-uploader=google.cloud.aiplatform.tensorboard.uploader_main:run_main
 
 requirements:
   host:
     - python
     - pip
+    - setuptools
+    - wheel
   run:
     - python
-    - google-api-core-grpc >=1.32.0,<3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*
-    - proto-plus >=1.22.0,<2.0.0dev
-    - protobuf >=3.19.5,<5.0.0dev,!=3.20.0,!=3.20.1,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5
-    - packaging >=14.3,<22.0.0dev
+    - google-api-core >=1.34.1,<3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*
+    - google-api-core-grpc
+    - proto-plus >=1.22.3,<2.0.0dev
+    - protobuf >=3.20.2,<6.0.0dev,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5
+    - packaging >=14.3
+    - google-auth >=2.14.1,<3.0.0dev
     - google-cloud-storage >=1.32.0,<3.0.0dev
-    - google-cloud-bigquery-core >=1.15.0,<4.0.0dev
+    - google-cloud-bigquery-core >=1.15.0,<4.0.0dev,!=3.20.0
     - google-cloud-resource-manager >=1.3.3,<3.0.0dev
-    - shapely <2.0.0
+    - shapely <3.0.0dev
+    - docstring_parser <1
+    - pydantic <3
 
 test:
   imports:
     - google
+    # vertex_ray is an extra and shouldn't be tested unless we want to add those extras
+    # - vertex_ray
+    - vertexai
   commands:
     - pip check
+    # missing dependency on absl-py
+    # - tb-gcp-uploader --help
   requires:
     - pip
 
 about:
-  home: https://github.com/googleapis/python-aiplatform
-  summary: Vertex AI API client library
+  home: https://cloud.google.com/vertex-ai/docs
   license: Apache-2.0
   license_file: LICENSE
-
+  license_family: Apache
+  summary: A Python SDK for Vertex AI, a fully managed, end-to-end platform for data science and machine learning.
+  description: |
+    Vertex AI: Google Vertex AI is an integrated suite of machine learning tools and services
+    for building and using ML models with AutoML or custom code. It offers both novices and
+    experts the best workbench for the entire machine learning development lifecycle.
+  doc_url: https://cloud.google.com/python/docs/reference/aiplatform/latest
+  dev_url: https://github.com/googleapis/python-aiplatform
+  
 extra:
   recipe-maintainers:
     - xylar

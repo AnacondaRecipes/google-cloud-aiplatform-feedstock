@@ -7,4 +7,4 @@ channels:
   - https://staging.continuum.io/prefect/fs/google-cloud-bigquery-feedstock/pr1/b60cd2a
   - https://staging.continuum.io/prefect/fs/db-dtypes-feedstock/pr2/858133a
   - https://staging.continuum.io/prefect/fs/google-cloud-resource-manager-feedstock/pr2/2111e8f
-  - https://staging.continuum.io/prefect/fs/grpc-google-iam-v1-feedstock/pr/dcf29b3
+  - https://staging.continuum.io/prefect/fs/grpc-google-iam-v1-feedstock/pr2/dcf29b3

@@ -111,6 +111,44 @@ requirements:
     # tokenization
     - sentencepiece >=0.2.0
 
+# list tests to be skipped
+{% set tests_to_skip = "" %}
+# test_admit for numerical approximation error
+{% set tests_to_skip = tests_to_skip + " test_admit" %}
+{% set tests_to_skip = tests_to_skip + " or test_function_call" %}
+{% set tests_to_skip = tests_to_skip + " or test_batch_predict_job_done_create" %}
+{% set tests_to_skip = tests_to_skip + " or test_function_response" %}
+# skip the whole class because it is not able to mock the GCS access correctly
+{% set tests_to_skip = tests_to_skip + " or TestGcsUtils" %}
+# results in "gs:////" instead of "gs://""
+{% set tests_to_skip = tests_to_skip + " or test_image_embedding_model_with_storage_url" %}
+
+# list test files to be ignored
+{% set tests_to_ignore = "" %}
+# noxfile.py#L205-L207
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/architecture" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/vertex_langchain" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/vertex_ray" %}
+# they require docker, some docker functionalities
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_prediction.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_docker_utils.py" %}
+# they require google-vizier unavailable
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_vizier.py" %}
+# they require explainable_ai_sdk
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_logdir_loader.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_explain_lit.py" %}
+# they require mlflow
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_autologging.py" %}
+# they require tensorboard
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_uploader.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_uploader_utils.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_cloud_profiler.py" %}
+# they require tensorflow
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_models.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_uploader_main.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_metadata_models.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_explain_saved_model_metadata_builder_tf1_test.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_explain_saved_model_metadata_builder_tf2_test.py" %}
 
 test:
   imports:
@@ -118,12 +156,35 @@ test:
     # vertex_ray is an extra and shouldn't be tested unless we want to add those extras
     # - vertex_ray
     - vertexai
-  commands:
-    - pip check
-    # missing dependency on absl-py
-    # - tb-gcp-uploader --help
   requires:
     - pip
+    - pytest
+    # noxfile.py#L56-L62
+    - mock
+    - pytest-asyncio
+    - pytest-xdist
+    # various dependencies according to tests need
+    - pandas
+    - tqdm
+    - scikit-learn
+    - sentencepiece
+    - nltk
+    - pyyaml
+    - absl-py
+    - pillow
+    - google-cloud-bigquery-storage
+    - fastapi
+    - werkzeug
+    - httpx
+    - ipython
+    - jinja2
+  source_files:
+    - tests/unit
+  commands:
+    - pip check
+    # tensorflow needed
+    # - tb-gcp-uploader --help
+    - pytest -vv tests/unit {{ tests_to_ignore }} -k "not ({{ tests_to_skip }})"
 
 about:
   home: https://cloud.google.com/vertex-ai/docs

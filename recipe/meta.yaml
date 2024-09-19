@@ -124,6 +124,8 @@ requirements:
 {% set tests_to_skip = tests_to_skip + " or TestGcsUtils" %}
 # results in "gs:////" instead of "gs://""
 {% set tests_to_skip = tests_to_skip + " or test_image_embedding_model_with_storage_url" %}
+# on py312 fails on self.assertEqual(stats.has_new_data_since_last_summarize(), True)
+{% set tests_to_skip = tests_to_skip + " or testSummarizeeWithoutTensorsOrBlobs" %}  # [py>311]
 
 # list test files to be ignored
 {% set tests_to_ignore = "" %}

@@ -131,6 +131,10 @@ requirements:
 {% set tests_to_skip = tests_to_skip + " or test_image_embedding_model_with_storage_url" %}
 # on py312 fails on self.assertEqual(stats.has_new_data_since_last_summarize(), True)
 {% set tests_to_skip = tests_to_skip + " or testSummarizeeWithoutTensorsOrBlobs" %}  # [py>311]
+# requires pyarrow which will cause conflicts
+{% set tests_to_skip = tests_to_skip + " or test_create_dataset_tabular_from_dataframe" %}
+# wrong positional index in a list, same items
+{% set tests_to_skip = tests_to_skip + " or test_get_experiment_df" %}
 
 # list test files to be ignored
 {% set tests_to_ignore = "" %}
@@ -195,6 +199,8 @@ test:
     - tests/unit
   commands:
     - pip check
+    # check that pip gets the correct version 
+    - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
     # tensorflow needed
     # - tb-gcp-uploader --help
     - pytest -vv tests/unit {{ tests_to_ignore }} -k "not ({{ tests_to_skip }})"

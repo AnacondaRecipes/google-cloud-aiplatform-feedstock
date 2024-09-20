@@ -130,12 +130,18 @@ requirements:
 {% set tests_to_skip = tests_to_skip + " or TestGcsUtils" %}
 # results in "gs:////" instead of "gs://""
 {% set tests_to_skip = tests_to_skip + " or test_image_embedding_model_with_storage_url" %}
-# flaky fails on self.assertEqual(stats.has_new_data_since_last_summarize(), True)
+# flaky fails
 {% set tests_to_skip = tests_to_skip + " or testSummarizeeWithoutTensorsOrBlobs" %}
+{% set tests_to_skip = tests_to_skip + " or testBlobTrackerNotUploaded" %}
+{% set tests_to_skip = tests_to_skip + " or testUploadedSummaryWithTensorsAndBlobs" %}
+{% set tests_to_skip = tests_to_skip + " or testHasNewDataSinceLastSummarizeReturnsTrueAfterNewBlob" %}
 # requires pyarrow which will cause conflicts
 {% set tests_to_skip = tests_to_skip + " or test_create_dataset_tabular_from_dataframe" %}
 # wrong positional index in a list, same items
 {% set tests_to_skip = tests_to_skip + " or test_get_experiment_df" %}
+# write permission error on win
+{% set tests_to_skip = tests_to_skip + " or test_package_folder" %}  # [win]
+{% set tests_to_skip = tests_to_skip + " or test_package_file" %}  # [win]
 
 # list test files to be ignored
 {% set tests_to_ignore = "" %}

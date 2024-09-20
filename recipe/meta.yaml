@@ -130,11 +130,6 @@ requirements:
 {% set tests_to_skip = tests_to_skip + " or TestGcsUtils" %}
 # results in "gs:////" instead of "gs://""
 {% set tests_to_skip = tests_to_skip + " or test_image_embedding_model_with_storage_url" %}
-# flaky fails
-{% set tests_to_skip = tests_to_skip + " or testSummarizeeWithoutTensorsOrBlobs" %}
-{% set tests_to_skip = tests_to_skip + " or testBlobTrackerNotUploaded" %}
-{% set tests_to_skip = tests_to_skip + " or testUploadedSummaryWithTensorsAndBlobs" %}
-{% set tests_to_skip = tests_to_skip + " or testHasNewDataSinceLastSummarizeReturnsTrueAfterNewBlob" %}
 # requires pyarrow which will cause conflicts
 {% set tests_to_skip = tests_to_skip + " or test_create_dataset_tabular_from_dataframe" %}
 # wrong positional index in a list, same items
@@ -172,6 +167,8 @@ requirements:
 # this requires directly google-cloud-bigquery-storage and if we add it in the test environment
 # will cause other conflicts
 {% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_featurestores.py" %}
+# flaky fails
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_upload_tracker.py" %}
 
 test:
   imports:

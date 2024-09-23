@@ -1,5 +1,5 @@
 {% set name = "google-cloud-aiplatform" %}
-{% set version = "1.21.0" %}
+{% set version = "1.66.0" %}
 
 package:
   name: {{ name|lower }}
@@ -7,41 +7,221 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/google-cloud-aiplatform-{{ version }}.tar.gz
-  sha256: 3cd8fdc1b38e2a21552cbdacb338c4779a27c222bb1ea2481eb56b4fa844917b
+  sha256: e95a2b45087e0e2cbfed9ffaf3f10aa8ef3fa2e5642f067246181b5c7b9b2b04
 
 build:
-  script: {{ PYTHON }} -m pip install . -vv
   number: 0
+  # skip s390x: many dependencies missing
+  skip: true  # [py<38 or s390x]
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+  entry_points:
+    - tb-gcp-uploader=google.cloud.aiplatform.tensorboard.uploader_main:run_main
 
 requirements:
   host:
     - python
     - pip
+    - setuptools
+    - wheel
   run:
     - python
-    - google-api-core-grpc >=1.32.0,<3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*
-    - proto-plus >=1.22.0,<2.0.0dev
-    - protobuf >=3.19.5,<5.0.0dev,!=3.20.0,!=3.20.1,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5
-    - packaging >=14.3,<22.0.0dev
+    - google-api-core >=1.34.1,<3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*
+    - google-api-core-grpc
+    - proto-plus >=1.22.3,<2.0.0dev
+    - protobuf >=3.20.2,<6.0.0dev,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5
+    - packaging >=14.3
+    - google-auth >=2.14.1,<3.0.0dev
     - google-cloud-storage >=1.32.0,<3.0.0dev
-    - google-cloud-bigquery-core >=1.15.0,<4.0.0dev
+    - google-cloud-bigquery-core >=1.15.0,<4.0.0dev,!=3.20.0
     - google-cloud-resource-manager >=1.3.3,<3.0.0dev
-    - shapely <2.0.0
+    - shapely <3.0.0dev
+    - docstring_parser <1
+    - pydantic <3
+  run_constrained:
+    # There are a lot of extras for this package and they often use
+    # the same packages with different pinnings. Here follow an approximation
+    # with some of those commented out, and the more restrictive ones
+    # enabled. To allow an easier update of these constraints, I leave
+    # them there and commented out.
+    #
+    # profiler
+    - tensorboard-plugin-profile >=2.4.0,<3.0.0dev
+    - werkzeug >=2.0.0,<2.1.0dev
+    - tensorflow >=2.4.0,<3.0.0dev
+    # tensorboard
+    # - tensorflow >=2.3.0,<3.0.0dev  # [py<312]
+    # metadata
+    # - pandas >=1.0.0
+    - numpy >=1.15.0
+    # xai
+    # - tensorflow >=2.3.0,<3.0.0dev
+    # lit
+    # - tensorflow >=2.3.0,<3.0.0dev
+    # - pandas >=1.0.0
+    - lit-nlp ==0.4.0
+    - explainable-ai-sdk >=1.0.0
+    # - pandas >=1.0.0
+    # - pyarrow >=6.0.1
+    # pipelines
+    - pyyaml >=5.3.1,<7
+    # datasets
+    - pyarrow >=3.0.0,<8.0dev   # [py<311]
+    - pyarrow >=10.0.1          # [py==311]
+    - pyarrow >=14.0.0          # [py>311]
+    # vizier
+    - google-vizier >=0.1.6
+    # prediction
+    # - docker >=5.0.3
+    # - fastapi >=0.71.0,<=0.114.0
+      # httpx is an optional dependency of fastapi
+    # - httpx >=0.23.0,<0.25.0 
+    # - starlette >=0.17.1
+    # - uvicorn >=0.16.0
+    # endpoint
+    - requests >=2.28.1
+    # private_endpoints
+    - urllib3 >=1.21.1,<1.27
+    # - requests >= 2.28.1
+    # autologging
+    - mlflow >=1.27.0,<=2.1.1
+    # ray
+        # Cluster only supports 2.9.3 and 2.33.0. Keep 2.4.0 for our testing environment.
+        # Note that testing is submiting a job in a cluster with Ray 2.9.3 remotely.
+    - ray >=2.4,<=2.33.0,!= 2.5.*,!= 2.6.*,!= 2.7.*,!=2.8.*,!=2.9.0,!=2.9.1,!=2.9.2,!=2.10.*,!=2.11.*,!=2.12.*,!=2.13.*,!=2.14.*,!=2.15.*,!=2.16.*,!=2.17.*,!=2.18.*,!=2.19.*,!=2.20.*,!=2.21.*,!=2.22.*,!=2.23.*,!=2.24.*,!=2.25.*,!=2.26.*,!=2.27.*,!=2.28.*,!=2.29.*,!=2.30.*,!=2.31.*,!=2.32.*  # [py<311]
+        # To avoid  ImportError: cannot import name 'packaging' from 'pkg.resources'
+    - setuptools < 70.0.0
+        # Ray Data v2.4 in Python 3.11 is broken, but got fixed in Ray v2.5.
+    - ray >=2.5,<= 2.33.0  # [py==311]
+    - pandas >=1.0.0,<2.2.0
+    # - pyarrow >=6.0.1
+        # Workaround for https://github.com/ray-project/ray/issues/36990.
+        # TODO(b/295406381): Remove this pin when we drop support of ray<=2.5.
+    # - pydantic <2
+    # genai_requires
+    # - pydantic <3
+    # - docstring_parser <1
+    # reasoning_engine
+    - cloudpickle >=3.0,<4.0
+    - google-cloud-trace <2
+    - opentelemetry-sdk <2
+    - opentelemetry-exporter-gcp-trace <2
+    - pydantic >=2.6.3,<3
+    # evaluation
+    # - pandas >=1.0.0,<2.2.0
+    - tqdm >=4.23.0
+    # langchain
+    - langchain >=0.1.16,<0.3
+    - langchain-core <0.3
+    - langchain-google-vertexai <2
+    - openinference-instrumentation-langchain >=0.1.19,<0.2
+    - tenacity <=8.3
+    - orjson <=3.10.6
+    # tokenization
+    - sentencepiece >=0.2.0
+
+# list tests to be skipped
+{% set tests_to_skip = "" %}
+# test_admit for numerical approximation error
+{% set tests_to_skip = tests_to_skip + " test_admit" %}
+{% set tests_to_skip = tests_to_skip + " or test_function_call" %}
+{% set tests_to_skip = tests_to_skip + " or test_batch_predict_job_done_create" %}
+{% set tests_to_skip = tests_to_skip + " or test_function_response" %}
+# skip the whole class because it is not able to mock the GCS access correctly
+{% set tests_to_skip = tests_to_skip + " or TestGcsUtils" %}
+# results in "gs:////" instead of "gs://""
+{% set tests_to_skip = tests_to_skip + " or test_image_embedding_model_with_storage_url" %}
+# requires pyarrow which will cause conflicts
+{% set tests_to_skip = tests_to_skip + " or test_create_dataset_tabular_from_dataframe" %}
+# wrong positional index in a list, same items
+{% set tests_to_skip = tests_to_skip + " or test_get_experiment_df" %}
+# write permission error on win
+{% set tests_to_skip = tests_to_skip + " or test_package_folder" %}  # [win]
+{% set tests_to_skip = tests_to_skip + " or test_package_file" %}  # [win]
+
+# list test files to be ignored
+{% set tests_to_ignore = "" %}
+# noxfile.py#L205-L207
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/architecture" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/vertex_langchain" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/vertex_ray" %}
+# they require docker, some docker functionalities
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_prediction.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_docker_utils.py" %}
+# they require google-vizier unavailable
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_vizier.py" %}
+# they require explainable_ai_sdk
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_logdir_loader.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_explain_lit.py" %}
+# they require mlflow
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_autologging.py" %}
+# they require tensorboard
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_uploader.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_uploader_utils.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_cloud_profiler.py" %}
+# they require tensorflow
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_models.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_uploader_main.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_metadata_models.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_explain_saved_model_metadata_builder_tf1_test.py" %}
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_explain_saved_model_metadata_builder_tf2_test.py" %}
+# this requires directly google-cloud-bigquery-storage and if we add it in the test environment
+# will cause other conflicts
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_featurestores.py" %}
+# flaky fails
+{% set tests_to_ignore = tests_to_ignore + " --ignore=tests/unit/aiplatform/test_upload_tracker.py" %}
 
 test:
   imports:
     - google
-  commands:
-    - pip check
+    # vertex_ray is an extra and shouldn't be tested unless we want to add those extras
+    # - vertex_ray
+    - vertexai
   requires:
     - pip
+    - pytest
+    # noxfile.py#L56-L62
+    - mock
+    - pytest-asyncio
+    - pytest-xdist
+    # Various optional dependencies for tests.
+    # Unfortunately, some other of them cannot be added because being optional
+    # and with the many constraints present, they conflict with each other.
+    - pandas
+    - tqdm
+    - scikit-learn
+    - sentencepiece
+    - nltk
+    - pyyaml
+    - absl-py
+    - pillow
+    - fastapi
+    - werkzeug
+    - httpx
+    - ipython
+    - jinja2
+  source_files:
+    - tests/unit
+  commands:
+    - pip check
+    # check that pip gets the correct version 
+    - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
+    # tensorflow needed
+    # - tb-gcp-uploader --help
+    - pytest -vv tests/unit {{ tests_to_ignore }} -k "not ({{ tests_to_skip }})"
 
 about:
-  home: https://github.com/googleapis/python-aiplatform
-  summary: Vertex AI API client library
+  home: https://cloud.google.com/vertex-ai/docs
   license: Apache-2.0
   license_file: LICENSE
-
+  license_family: Apache
+  summary: A Python SDK for Vertex AI, a fully managed, end-to-end platform for data science and machine learning.
+  description: |
+    Vertex AI: Google Vertex AI is an integrated suite of machine learning tools and services
+    for building and using ML models with AutoML or custom code. It offers both novices and
+    experts the best workbench for the entire machine learning development lifecycle.
+  doc_url: https://cloud.google.com/python/docs/reference/aiplatform/latest
+  dev_url: https://github.com/googleapis/python-aiplatform
+  
 extra:
   recipe-maintainers:
     - xylar
